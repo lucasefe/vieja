@@ -24,6 +24,7 @@ Tests/ViejaCoreTests/              XCTest for Router only
 make test       swift test
 make run        build release, assemble build/Vieja.app, ad-hoc sign, lsregister, relaunch
 make install    same, but into /Applications
+make release    VERSION=x.y.z: bump Info.plist, build dmg, tag, push, gh release
 ```
 
 Smoke test without changing the system default browser:

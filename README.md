@@ -6,6 +6,10 @@ Personal use. AppKit only, SwiftPM, no Xcode project, no dependencies.
 
 ## Install
 
+Grab the latest `.dmg` from [Releases](https://github.com/lucasefe/vieja/releases) and drag Vieja to Applications. The app is ad-hoc signed, so on first launch right-click → Open (or `xattr -d com.apple.quarantine /Applications/Vieja.app`).
+
+Or from source:
+
 ```
 make install          # builds, assembles /Applications/Vieja.app, launches it
 ```
@@ -13,6 +17,12 @@ make install          # builds, assembles /Applications/Vieja.app, launches it
 Then click the menu-bar icon → **Set Vieja as Default Browser**.
 
 Other targets: `make run` (build into `build/Vieja.app` and launch), `make test`, `make clean`.
+
+## Release
+
+```
+make release VERSION=0.2.0    # bumps Info.plist, builds dmg, tags, pushes, publishes GitHub release
+```
 
 ## Usage
 

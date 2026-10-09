@@ -1,5 +1,4 @@
 import AppKit
-import ServiceManagement
 import ViejaCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
@@ -11,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.button?.image = NSImage(systemSymbolName: "arrow.triangle.branch", accessibilityDescription: "Vieja")
         statusItem.menu = NSMenu()
         statusItem.menu?.delegate = self
+        if ProcessInfo.processInfo.environment["VIEJA_SETTINGS"] != nil { SettingsWindow.show() } // dev: open settings on launch
     }
 
     // MARK: URL handling
@@ -55,12 +55,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(.separator())
         menu.addItem(withTitle: "Open URL from Clipboard", action: #selector(openClipboard), keyEquivalent: "").target = self
+        menu.addItem(withTitle: "Settings…", action: #selector(showSettings), keyEquivalent: ",").target = self
         menu.addItem(withTitle: "Edit Config…", action: #selector(editConfig), keyEquivalent: "").target = self
         menu.addItem(withTitle: "Set Vieja as Default Browser", action: #selector(makeSystemDefault), keyEquivalent: "").target = self
-        let login = NSMenuItem(title: "Launch at Login", action: #selector(toggleLogin), keyEquivalent: "")
-        login.target = self
-        login.state = SMAppService.mainApp.status == .enabled ? .on : .off
-        menu.addItem(login)
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Vieja", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
     }
@@ -82,12 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         NSWorkspace.shared.open(Config.path)
     }
 
-    @objc private func toggleLogin() {
-        do {
-            if SMAppService.mainApp.status == .enabled { try SMAppService.mainApp.unregister() }
-            else { try SMAppService.mainApp.register() }
-        } catch { NSLog("vieja: login item: %@", error.localizedDescription) }
-    }
+    @objc private func showSettings() { SettingsWindow.show() }
 
     @objc private func makeSystemDefault() {
         let me = Bundle.main.bundleURL

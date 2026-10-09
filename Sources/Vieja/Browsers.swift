@@ -9,9 +9,9 @@ struct Browser {
 }
 
 enum Browsers {
-    static func all(config: Config) -> [Browser] {
+    static func all(config: Config, includeHidden: Bool = false) -> [Browser] {
         let me = Bundle.main.bundleIdentifier
-        let hidden = Set(config.hiddenBrowsers)
+        let hidden = includeHidden ? [] : Set(config.hiddenBrowsers)
         var seen = Set<String>()
         return NSWorkspace.shared.urlsForApplications(toOpen: URL(string: "https://example.com")!)
             .compactMap { u -> Browser? in

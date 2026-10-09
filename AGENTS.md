@@ -1,6 +1,6 @@
 # Vieja
 
-Minimal Velja clone: macOS menu-bar app that registers as the default browser and routes http/https URLs to a real browser by regex rules. Personal use, AppKit only, no Xcode project.
+macOS menu-bar app that registers as the default browser and routes http/https URLs to a real browser by regex rules. Personal use, AppKit + SwiftUI (settings only), SwiftPM, no Xcode project.
 
 ## Layout
 
@@ -13,6 +13,8 @@ Sources/ViejaCore/Router.swift     pure: stripTracking(), resolve() -> Target
 Sources/Vieja/main.swift           AppDelegate: URL handler, status item menu
 Sources/Vieja/Browsers.swift       discover browsers via NSWorkspace, open URL in bundle id
 Sources/Vieja/Prompt.swift         NSPanel picker, 1-9 keys, Esc, Cmd+C
+Sources/Vieja/Settings.swift       SwiftUI settings window in NSWindow, saves config on every change
+scripts/icon.swift                 renders the menu-bar symbol as the app icon; make app builds the .icns
 Tests/ViejaCoreTests/              XCTest for Router only
 ```
 
@@ -56,5 +58,5 @@ Rules are checked in order, first match wins. Browser profiles that ship as thei
 - Ponytail mode: shortest working diff, stdlib/AppKit first, no new dependencies, no abstractions with one implementation.
 - Mark deliberate shortcuts with `// ponytail:` naming the ceiling and upgrade path.
 - Non-trivial logic in `ViejaCore` gets one XCTest. UI code is verified by `make run` + a smoke `open -a`.
-- Do not add: settings UI, source-app rules, short URL expansion, Chrome `--profile-directory`, custom URL scheme, history/log window. Add only when a concrete misroute demands it.
+- Do not add: source-app rules, short URL expansion, Chrome `--profile-directory`, custom URL scheme, history/log window. Add only when a concrete misroute demands it.
 - Commit only when asked.

@@ -56,9 +56,6 @@ private struct GeneralView: View {
 
     var body: some View {
         Form {
-            browserPicker("Default browser:", browsers: m.browsers, $m.config.defaultBrowser)
-            browserPicker("Option-click:", browsers: m.browsers, $m.config.alternativeBrowser)
-
             LabeledContent("General:") {
                 VStack(alignment: .leading, spacing: 6) {
                     Toggle("Launch Vieja at login", isOn: $loginEnabled)
@@ -70,6 +67,9 @@ private struct GeneralView: View {
                     }
                 }
             }
+
+            browserPicker("Default browser:", browsers: m.browsers, $m.config.defaultBrowser)
+            browserPicker("Option-click:", browsers: m.browsers, $m.config.alternativeBrowser)
 
             LabeledContent("Browsers:") {
                 VStack(alignment: .leading, spacing: 6) {

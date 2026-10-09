@@ -43,6 +43,19 @@ private struct SettingsView: View {
 
             browsersSection
             trackingSection
+
+            Section {
+                HStack {
+                    Button("Set Vieja as Default Browser") {
+                        let me = Bundle.main.bundleURL
+                        NSWorkspace.shared.setDefaultApplication(at: me, toOpenURLsWithScheme: "http") { _ in
+                            NSWorkspace.shared.setDefaultApplication(at: me, toOpenURLsWithScheme: "https")
+                        }
+                    }
+                    Spacer()
+                    Button("Edit config.json…") { NSWorkspace.shared.open(Config.path) }
+                }
+            }
         }
         .formStyle(.grouped)
         .frame(width: 560, height: 640)
@@ -71,13 +84,6 @@ private struct SettingsView: View {
                         .disabled(selectedRule == nil)
                     Button("↑") { move(-1) }.disabled(selectedRule == nil || selectedRule == 0)
                     Button("↓") { move(1) }.disabled(selectedRule == nil || selectedRule == config.rules.count - 1)
-                    Spacer()
-                    Button("Set Vieja as Default Browser") {
-                        let me = Bundle.main.bundleURL
-                        NSWorkspace.shared.setDefaultApplication(at: me, toOpenURLsWithScheme: "http") { _ in
-                            NSWorkspace.shared.setDefaultApplication(at: me, toOpenURLsWithScheme: "https")
-                        }
-                    }
                 }
     }
 

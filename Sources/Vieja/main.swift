@@ -56,8 +56,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
         menu.addItem(withTitle: "Open URL from Clipboard", action: #selector(openClipboard), keyEquivalent: "").target = self
         menu.addItem(withTitle: "Settings…", action: #selector(showSettings), keyEquivalent: ",").target = self
-        menu.addItem(withTitle: "Edit Config…", action: #selector(editConfig), keyEquivalent: "").target = self
-        menu.addItem(withTitle: "Set Vieja as Default Browser", action: #selector(makeSystemDefault), keyEquivalent: "").target = self
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Vieja", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
     }
@@ -74,19 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         handle(url, optionHeld: NSEvent.modifierFlags.contains(.option))
     }
 
-    @objc private func editConfig() {
-        _ = Config.load()
-        NSWorkspace.shared.open(Config.path)
-    }
-
     @objc private func showSettings() { SettingsWindow.show() }
-
-    @objc private func makeSystemDefault() {
-        let me = Bundle.main.bundleURL
-        NSWorkspace.shared.setDefaultApplication(at: me, toOpenURLsWithScheme: "http") { _ in
-            NSWorkspace.shared.setDefaultApplication(at: me, toOpenURLsWithScheme: "https")
-        }
-    }
 }
 
 let app = NSApplication.shared

@@ -1,6 +1,6 @@
 # Vieja
 
-Minimal [Velja](https://sindresorhus.com/velja) clone. A macOS menu-bar app that registers as the default browser and routes `http`/`https` links to a real browser by regex rules, or shows a picker.
+A macOS menu-bar app that registers as the default browser and routes `http`/`https` links to a real browser by regex rules, or shows a picker.
 
 Personal use. AppKit only, SwiftPM, no Xcode project, no dependencies.
 

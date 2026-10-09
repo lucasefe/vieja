@@ -27,7 +27,14 @@ enum SettingsWindow {
             w.isReleasedWhenClosed = false
             w.center()
             window = w
+            // ponytail: a focused TextField eats Esc before the window sees cancelOperation; ⌘W comes from the main menu
+            NSEvent.addLocalMonitorForEvents(matching: .keyDown) { e in
+                guard e.window === window, e.keyCode == 53 else { return e } // 53 = Esc
+                window?.close()
+                return nil
+            }
         }
+        (window?.contentViewController as? NSTabViewController)?.selectedTabViewItemIndex = 0
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
     }

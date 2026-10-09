@@ -14,6 +14,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Vieja", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
+        // ponytail: never visible (accessory app) but gives ⌘W/⌘C/⌘V/⌘A etc. to the settings fields
+        let main = NSMenu()
+        let edit = NSMenu(title: "Edit")
+        for (t, a, k) in [("Undo", "undo:", "z"), ("Redo", "redo:", "Z"), ("Cut", "cut:", "x"), ("Copy", "copy:", "c"),
+                          ("Paste", "paste:", "v"), ("Select All", "selectAll:", "a"), ("Close", "performClose:", "w")] {
+            edit.addItem(withTitle: t, action: Selector(a), keyEquivalent: k)
+        }
+        main.addItem(withTitle: "Edit", action: nil, keyEquivalent: "").submenu = edit
+        NSApp.mainMenu = main
         if ProcessInfo.processInfo.environment["VIEJA_SETTINGS"] != nil { SettingsWindow.show() } // dev: open settings on launch
     }
 

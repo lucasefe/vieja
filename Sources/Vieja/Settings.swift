@@ -8,6 +8,7 @@ import ViejaCore
 ///   General  — app: launch at login, system default browser, tracking params, config file
 ///   Browsers — default / option-click browser, and which browsers are shown
 ///   Rules    — regex → browser table
+///   About    — version, author, repo
 enum SettingsWindow {
     private static var window: NSWindow?
 
@@ -19,6 +20,7 @@ enum SettingsWindow {
             tabs.addTabViewItem(tab("General", symbol: "gearshape", view: GeneralView()))
             tabs.addTabViewItem(tab("Browsers", symbol: "globe", view: BrowsersView()))
             tabs.addTabViewItem(tab("Rules", symbol: "arrow.triangle.branch", view: RulesView()))
+            tabs.addTabViewItem(tab("About", symbol: "info.circle", view: AboutView()))
             let w = NSWindow(contentViewController: tabs)
             w.title = "Vieja Settings"
             w.styleMask = [.titled, .closable]
@@ -247,5 +249,26 @@ private struct MatchField: View {
     var body: some View {
         TextField("", text: $m.config.rules[index].match)
             .foregroundStyle((try? NSRegularExpression(pattern: m.config.rules[index].match)) == nil ? Color.red : Color.primary)
+    }
+}
+
+// MARK: - About
+
+private struct AboutView: View {
+    private let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev"
+    private let repo = URL(string: "https://github.com/lucasefe/vieja")!
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 96, height: 96)
+            Text("Vieja").font(.title2).bold()
+            Text("Version \(version)").foregroundStyle(.secondary)
+            Text("Routes links to the right browser.").padding(.top, 4)
+            Spacer().frame(height: 8)
+            Text("Lucas Florio")
+            Link(repo.host! + repo.path, destination: repo)
+        }
+        .padding(28)
+        .frame(width: pageWidth)
     }
 }

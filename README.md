@@ -6,7 +6,14 @@ Personal use. AppKit only, SwiftPM, no Xcode project, no dependencies.
 
 ## Install
 
-Grab the latest `.dmg` from [Releases](https://github.com/lucasefe/vieja/releases) and drag Vieja to Applications. The app is ad-hoc signed, so on first launch right-click → Open (or `xattr -d com.apple.quarantine /Applications/Vieja.app`).
+Grab the latest `.dmg` from [Releases](https://github.com/lucasefe/vieja/releases) and drag Vieja to Applications. The app is ad-hoc signed (no Apple Developer ID), so Gatekeeper refuses it on first launch. Clear the quarantine flag and open it:
+
+```
+xattr -d com.apple.quarantine /Applications/Vieja.app
+open /Applications/Vieja.app
+```
+
+(Or click Done in the dialog, then System Settings → Privacy & Security → **Open Anyway**.)
 
 Or from source:
 

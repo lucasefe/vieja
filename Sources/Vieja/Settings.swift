@@ -117,7 +117,9 @@ private struct DefaultBrowserRow: View {
     }
 
     private func check() -> Bool {
-        NSWorkspace.shared.urlForApplication(toOpen: URL(string: "https://example.com")!) == Bundle.main.bundleURL
+        // by bundle id, not path: the dev build in build/ should still read as "default" when /Applications/Vieja.app is
+        guard let u = NSWorkspace.shared.urlForApplication(toOpen: URL(string: "https://example.com")!) else { return false }
+        return Bundle(url: u)?.bundleIdentifier == Bundle.main.bundleIdentifier
     }
 
     private func setDefault() {

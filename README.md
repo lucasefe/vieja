@@ -36,7 +36,7 @@ make release VERSION=0.2.0    # bumps Info.plist, builds dmg, tags, pushes, publ
 - Click a link anywhere → Vieja routes it by the rules below.
 - Hold **Option** while clicking → uses `alternativeBrowser` instead.
 - Picker: click an icon or press **1–9**. **Esc** closes, **Cmd+C** copies the URL.
-- Menu bar: switch the default browser, open a URL from the clipboard, edit config.
+- Menu bar: open a URL from the clipboard, Settings (browsers, rules, launch at login, set as default browser).
 
 Tracking params (`utm_*`, `fbclid`, `gclid`, … plus `extraTrackingParams`) are stripped before routing.
 

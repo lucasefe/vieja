@@ -10,7 +10,7 @@ Info.plist                         LSUIElement, CFBundleURLTypes http/https
 Makefile                           build / app / run / install / test
 Sources/ViejaCore/Config.swift     Codable config, ~/.config/vieja/config.json
 Sources/ViejaCore/Router.swift     pure: stripTracking(), resolve() -> Target
-Sources/Vieja/main.swift           AppDelegate: URL handler, status item menu
+Sources/Vieja/main.swift           AppDelegate: URL handler, status item menu (clipboard, settings, quit)
 Sources/Vieja/Browsers.swift       discover browsers via NSWorkspace, open URL in bundle id
 Sources/Vieja/Prompt.swift         NSPanel picker, 1-9 keys, Esc, Cmd+C
 Sources/Vieja/Settings.swift       SwiftUI settings window in NSWindow, saves config on every change
@@ -39,7 +39,7 @@ Logs: `NSLog("vieja: ...")`, read with `/usr/bin/log stream --predicate 'process
 
 ## Config
 
-`~/.config/vieja/config.json`, re-read on every URL (no watcher). Written with a template on first run. Menu bar browser switch writes it back (pretty, sorted keys).
+`~/.config/vieja/config.json`, re-read on every URL (no watcher). Written with a template on first run. Settings window writes it back on every change (pretty, sorted keys).
 
 ```json
 {

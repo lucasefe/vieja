@@ -1,15 +1,19 @@
 import AppKit
 import ViejaCore
 
-final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         _ = Config.load() // writes a template on first run
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = NSImage(systemSymbolName: "arrow.triangle.branch", accessibilityDescription: "Vieja")
-        statusItem.menu = NSMenu()
-        statusItem.menu?.delegate = self
+        let menu = NSMenu()
+        menu.addItem(withTitle: "Open URL from Clipboard", action: #selector(openClipboard), keyEquivalent: "").target = self
+        menu.addItem(withTitle: "Settings…", action: #selector(showSettings), keyEquivalent: ",").target = self
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "Quit Vieja", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        statusItem.menu = menu
         if ProcessInfo.processInfo.environment["VIEJA_SETTINGS"] != nil { SettingsWindow.show() } // dev: open settings on launch
     }
 
@@ -34,37 +38,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     // MARK: Menu
-
-    func menuNeedsUpdate(_ menu: NSMenu) {
-        menu.removeAllItems()
-        let config = Config.load()
-        for b in Browsers.all(config: config) {
-            let item = NSMenuItem(title: b.name, action: #selector(setDefault(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = b.id
-            item.image = b.icon
-            item.image?.size = NSSize(width: 16, height: 16)
-            item.state = b.id == config.defaultBrowser ? .on : .off
-            menu.addItem(item)
-        }
-        let prompt = NSMenuItem(title: "Prompt", action: #selector(setDefault(_:)), keyEquivalent: "")
-        prompt.target = self
-        prompt.representedObject = "prompt"
-        prompt.state = config.defaultBrowser == "prompt" ? .on : .off
-        menu.addItem(prompt)
-
-        menu.addItem(.separator())
-        menu.addItem(withTitle: "Open URL from Clipboard", action: #selector(openClipboard), keyEquivalent: "").target = self
-        menu.addItem(withTitle: "Settings…", action: #selector(showSettings), keyEquivalent: ",").target = self
-        menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit Vieja", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-    }
-
-    @objc private func setDefault(_ sender: NSMenuItem) {
-        var config = Config.load()
-        config.defaultBrowser = sender.representedObject as! String
-        try? config.save()
-    }
 
     @objc private func openClipboard() {
         guard let s = NSPasteboard.general.string(forType: .string)?.trimmingCharacters(in: .whitespacesAndNewlines),

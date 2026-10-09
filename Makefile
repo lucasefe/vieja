@@ -8,10 +8,20 @@ DMG     = build/Vieja-$(VERSION).dmg
 build:
 	swift build -c release
 
-app: build
+build/AppIcon.icns: scripts/icon.swift
+	mkdir -p build && swift scripts/icon.swift build/AppIcon.png
+	rm -rf build/AppIcon.iconset && mkdir build/AppIcon.iconset
+	for s in 16 32 128 256 512; do \
+	  sips -z $$s $$s build/AppIcon.png --out build/AppIcon.iconset/icon_$${s}x$${s}.png >/dev/null; \
+	  sips -z $$((s*2)) $$((s*2)) build/AppIcon.png --out build/AppIcon.iconset/icon_$${s}x$${s}@2x.png >/dev/null; \
+	done
+	iconutil -c icns build/AppIcon.iconset -o $@
+
+app: build build/AppIcon.icns
 	rm -rf $(APP)
-	mkdir -p $(APP)/Contents/MacOS
+	mkdir -p $(APP)/Contents/MacOS $(APP)/Contents/Resources
 	cp $(BIN) $(APP)/Contents/MacOS/Vieja
+	cp build/AppIcon.icns $(APP)/Contents/Resources/AppIcon.icns
 	cp Info.plist $(APP)/Contents/Info.plist
 	codesign --force --sign - $(APP)
 	/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f $(APP)

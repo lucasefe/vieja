@@ -18,6 +18,8 @@
 	</array>
 	<key>CFBundleExecutable</key>
 	<string>Vieja</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>dev.lucasefe.Vieja</string>
 	<key>CFBundleName</key>

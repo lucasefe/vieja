@@ -3,13 +3,18 @@ import ServiceManagement
 import SwiftUI
 import ViejaCore
 
-/// Settings window. Every change is saved immediately; config is re-read per URL so it is live.
+/// Settings window: toolbar tabs (General, Rules). Every change is saved immediately; config is re-read per URL.
 enum SettingsWindow {
     private static var window: NSWindow?
 
     static func show() {
         if window == nil {
-            let w = NSWindow(contentViewController: NSHostingController(rootView: SettingsView()))
+            let tabs = NSTabViewController()
+            tabs.tabStyle = .toolbar
+            tabs.canPropagateSelectedChildViewControllerTitle = false
+            tabs.addTabViewItem(tab("General", symbol: "gearshape", view: GeneralView()))
+            tabs.addTabViewItem(tab("Rules", symbol: "arrow.triangle.branch", view: RulesView()))
+            let w = NSWindow(contentViewController: tabs)
             w.title = "Vieja Settings"
             w.styleMask = [.titled, .closable]
             w.isReleasedWhenClosed = false
@@ -19,104 +24,95 @@ enum SettingsWindow {
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
     }
+
+    private static func tab<V: View>(_ label: String, symbol: String, view: V) -> NSTabViewItem {
+        let host = NSHostingController(rootView: view)
+        host.sizingOptions = .preferredContentSize // lets the tab controller resize the window per tab
+        let item = NSTabViewItem(viewController: host)
+        item.label = label
+        item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: label)
+        return item
+    }
 }
 
-private struct SettingsView: View {
-    @State private var config = Config.load()
+private final class Model: ObservableObject {
+    @Published var config = Config.load() { didSet { try? config.save() } }
+    let browsers = Browsers.all(config: Config(), includeHidden: true)
+}
+
+/// Picker of installed browsers + Prompt. Unknown ids (uninstalled browser) get their own entry so they are not clobbered.
+private func browserPicker(_ label: String, browsers: [Browser], _ sel: Binding<String>) -> some View {
+    var options: [(String, String)] = [("prompt", "Prompt")] + browsers.map { ($0.id, $0.name) }
+    if !options.contains(where: { $0.0 == sel.wrappedValue }) { options.append((sel.wrappedValue, sel.wrappedValue)) }
+    return Picker(label, selection: sel) {
+        ForEach(options, id: \.0) { Text($0.1).tag($0.0) }
+    }
+    .fixedSize()
+}
+
+private struct GeneralView: View {
+    @StateObject private var m = Model()
     @State private var loginEnabled = SMAppService.mainApp.status == .enabled
-    @State private var selectedRule: Int?
-    private let browsers = Browsers.all(config: Config(), includeHidden: true)
 
     var body: some View {
         Form {
-            Section {
-                browserPicker("Default browser", $config.defaultBrowser)
-                browserPicker("Option-click browser", $config.alternativeBrowser)
-                Toggle("Launch at login", isOn: $loginEnabled)
-                    .onChange(of: loginEnabled) { _, on in setLogin(on) }
+            browserPicker("Default browser:", browsers: m.browsers, $m.config.defaultBrowser)
+            browserPicker("Option-click:", browsers: m.browsers, $m.config.alternativeBrowser)
+
+            LabeledContent("General:") {
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle("Launch Vieja at login", isOn: $loginEnabled)
+                        .onChange(of: loginEnabled) { _, on in setLogin(on) }
+                    HStack {
+                        Text("Vieja handles http/https links").foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Set as Default Browser…") { makeSystemDefault() }
+                    }
+                }
             }
 
-            Section("Rules — first match wins") {
-                rulesTable
-                rulesButtons
-            }
-
-            browsersSection
-            trackingSection
-
-            Section {
-                HStack {
-                    Button("Set Vieja as Default Browser") {
-                        let me = Bundle.main.bundleURL
-                        NSWorkspace.shared.setDefaultApplication(at: me, toOpenURLsWithScheme: "http") { _ in
-                            NSWorkspace.shared.setDefaultApplication(at: me, toOpenURLsWithScheme: "https")
+            LabeledContent("Browsers:") {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(m.browsers, id: \.id) { b in
+                        Toggle(isOn: shown(b.id)) {
+                            Label { Text(b.name) } icon: { Image(nsImage: b.icon).resizable().frame(width: 16, height: 16) }
                         }
                     }
-                    Spacer()
-                    Button("Edit config.json…") { NSWorkspace.shared.open(Config.path) }
+                    Text("Unchecked browsers are hidden from the picker.").foregroundStyle(.secondary).font(.callout)
                 }
             }
-        }
-        .formStyle(.grouped)
-        .frame(width: 560, height: 640)
-        .onChange(of: config) { _, c in try? c.save() }
-    }
 
-    private struct Row: Identifiable { let id: Int }
+            LabeledContent("Tracking params:") {
+                VStack(alignment: .leading, spacing: 4) {
+                    TextField("", text: Binding(
+                        get: { m.config.extraTrackingParams.joined(separator: ", ") },
+                        set: { m.config.extraTrackingParams = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }))
+                    Text("Stripped from URLs, in addition to utm_* and common ad ids. Comma-separated.")
+                        .foregroundStyle(.secondary).font(.callout).fixedSize(horizontal: false, vertical: true)
+                }
+            }
 
-    private var rulesTable: some View {
-        Table(config.rules.indices.map(Row.init), selection: $selectedRule) {
-            TableColumn("Match (regex)") { row in matchField(row.id) }
-            TableColumn("Browser") { row in browserPicker("", $config.rules[row.id].browser) }
-        }
-        .frame(minHeight: 160)
-    }
-
-    private func matchField(_ i: Int) -> some View {
-        TextField("", text: $config.rules[i].match)
-            .foregroundStyle(validRegex(config.rules[i].match) ? Color.primary : Color.red)
-    }
-
-    private var rulesButtons: some View {
+            LabeledContent("Config file:") {
                 HStack {
-                    Button("+") { config.rules.append(Rule(match: "", browser: "prompt")); selectedRule = config.rules.count - 1 }
-                    Button("−") { if let i = selectedRule { config.rules.remove(at: i); selectedRule = nil } }
-                        .disabled(selectedRule == nil)
-                    Button("↑") { move(-1) }.disabled(selectedRule == nil || selectedRule == 0)
-                    Button("↓") { move(1) }.disabled(selectedRule == nil || selectedRule == config.rules.count - 1)
-                }
-    }
-
-    private var browsersSection: some View {
-            Section("Browsers shown in picker and menu") {
-                ForEach(browsers, id: \.id) { b in
-                    Toggle(isOn: Binding(
-                        get: { !config.hiddenBrowsers.contains(b.id) },
-                        set: { shown in
-                            config.hiddenBrowsers.removeAll { $0 == b.id }
-                            if !shown { config.hiddenBrowsers.append(b.id) }
-                        })) {
-                        Label { Text(b.name) } icon: { Image(nsImage: b.icon).resizable().frame(width: 16, height: 16) }
-                    }
+                    Text(Config.path.path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
+                        .foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle)
+                    Spacer()
+                    Button("Edit…") { NSWorkspace.shared.open(Config.path) }
                 }
             }
-    }
-
-    private var trackingSection: some View {
-            Section {
-                TextField("Extra tracking params (comma-separated)", text: Binding(
-                    get: { config.extraTrackingParams.joined(separator: ", ") },
-                    set: { config.extraTrackingParams = $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }))
-            }
-    }
-
-    private func browserPicker(_ label: String, _ sel: Binding<String>) -> some View {
-        // ponytail: unknown ids (uninstalled browser) get their own entry so the picker doesn't clobber them
-        var options: [(String, String)] = [("prompt", "Prompt")] + browsers.map { ($0.id, $0.name) }
-        if !options.contains(where: { $0.0 == sel.wrappedValue }) { options.append((sel.wrappedValue, sel.wrappedValue)) }
-        return Picker(label, selection: sel) {
-            ForEach(options, id: \.0) { Text($0.1).tag($0.0) }
         }
+        .formStyle(.columns)
+        .toggleStyle(.checkbox)
+        .padding(20)
+        .frame(width: 560)
+    }
+
+    private func shown(_ id: String) -> Binding<Bool> {
+        Binding(get: { !m.config.hiddenBrowsers.contains(id) },
+                set: { on in
+                    m.config.hiddenBrowsers.removeAll { $0 == id }
+                    if !on { m.config.hiddenBrowsers.append(id) }
+                })
     }
 
     private func setLogin(_ on: Bool) {
@@ -125,11 +121,48 @@ private struct SettingsView: View {
         } catch { NSLog("vieja: login item: %@", error.localizedDescription) }
     }
 
-    private func move(_ delta: Int) {
-        guard let i = selectedRule else { return }
-        config.rules.swapAt(i, i + delta)
-        selectedRule = i + delta
+    private func makeSystemDefault() {
+        let me = Bundle.main.bundleURL
+        NSWorkspace.shared.setDefaultApplication(at: me, toOpenURLsWithScheme: "http") { _ in
+            NSWorkspace.shared.setDefaultApplication(at: me, toOpenURLsWithScheme: "https")
+        }
+    }
+}
+
+private struct RulesView: View {
+    @StateObject private var m = Model()
+    @State private var selected: Int?
+    private struct Row: Identifiable { let id: Int }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Table(m.config.rules.indices.map(Row.init), selection: $selected) {
+                TableColumn("Match (regex)") { row in matchField(row.id) }
+                TableColumn("Open in") { row in browserPicker("", browsers: m.browsers, $m.config.rules[row.id].browser).labelsHidden().frame(maxWidth: .infinity, alignment: .leading) }
+            }
+            .frame(height: 260)
+            HStack {
+                Button("+") { m.config.rules.append(Rule(match: "", browser: "prompt")); selected = m.config.rules.count - 1 }
+                Button("−") { if let i = selected { m.config.rules.remove(at: i); selected = nil } }.disabled(selected == nil)
+                Button("↑") { move(-1) }.disabled(selected == nil || selected == 0)
+                Button("↓") { move(1) }.disabled(selected == nil || selected == m.config.rules.count - 1)
+                Spacer()
+            }
+            Text("Case-insensitive regex tested against the full URL. Rules are checked top to bottom; first match wins. Unmatched links go to the default browser.")
+                .foregroundStyle(.secondary).font(.callout)
+        }
+        .padding(20)
+        .frame(width: 560)
     }
 
-    private func validRegex(_ s: String) -> Bool { (try? NSRegularExpression(pattern: s)) != nil }
+    private func matchField(_ i: Int) -> some View {
+        TextField("", text: $m.config.rules[i].match)
+            .foregroundStyle((try? NSRegularExpression(pattern: m.config.rules[i].match)) == nil ? Color.red : Color.primary)
+    }
+
+    private func move(_ delta: Int) {
+        guard let i = selected else { return }
+        m.config.rules.swapAt(i, i + delta)
+        selected = i + delta
+    }
 }

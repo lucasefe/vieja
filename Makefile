@@ -43,5 +43,5 @@ release:
 	hdiutil create -volname Vieja -srcfolder $(APP) -ov -format UDZO $(DMG)
 	git commit -am "release v$(VERSION)"
 	git tag v$(VERSION)
-	git push --follow-tags
+	git push && git push origin v$(VERSION)
 	gh release create v$(VERSION) $(DMG) --title "v$(VERSION)" --generate-notes

@@ -51,7 +51,7 @@ Logs: `NSLog("vieja: ...")`, read with `/usr/bin/log stream --predicate 'process
 }
 ```
 
-Rules are checked in order, first match wins. Browser profiles that ship as their own `.app` (e.g. Orion `~/Applications/Orion/Orion Profiles/*/*.app`) appear automatically as separate browsers with their own bundle id. Exception: Orion profile apps are bash wrappers that exec the main Orion binary, so LaunchServices sees them all as `com.kagi.kagimacOS`; `Browsers.open` finds the running profile by its `-P <uuid>` argv and sends that pid the AppleScript `make new tab with properties {URL:…}` event. A plain `kAEGetURL` does not work: Orion forwards external links to another profile per its "Open External Links In" setting.
+Rules are checked in order, first match wins. Browser profiles that ship as their own `.app` (e.g. Orion `~/Applications/Orion/Orion Profiles/*/*.app`) appear automatically as separate browsers with their own bundle id. No profile-specific code.
 
 ## Conventions
 

@@ -76,6 +76,8 @@ printf '#!/bin/bash\n\nexec arch -arm64 "/Applications/Orion.app/Contents/MacOS/
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$DST"
 ```
 
+In Orion > Settings > General, set **Open External Links In** to **Last Active Profile**. With **Default Profile**, Orion forwards links that arrive at another profile to Default, so links routed to e.g. Work can still land in Default.
+
 Then add `"com.kagi.kagimacOS"` to `hiddenBrowsers` so the ambiguous bare "Orion" entry disappears. Orion does not accept a URL on argv, so the stub must go through Launch Services; this is why Vieja has no profile-specific code.
 
 ## Debugging

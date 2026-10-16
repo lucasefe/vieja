@@ -48,8 +48,6 @@
 	<string>14.0</string>
 	<key>LSUIElement</key>
 	<true/>
-	<key>NSAppleEventsUsageDescription</key>
-	<string>Vieja sends links directly to the right Orion profile.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
